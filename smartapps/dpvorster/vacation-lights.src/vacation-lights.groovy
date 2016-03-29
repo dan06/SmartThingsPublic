@@ -169,7 +169,7 @@ def scheduleCheck()
         try
         {
         	// Start harmony activity
-        	//harmony?.startActivity(activity)
+        	harmony?.startActivity(activity)
         }
         catch(e)
         {
