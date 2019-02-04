@@ -23,10 +23,10 @@ preferences
 			input "heatingSetpoint", "number", title: "Heating?", required: true
             input "coolingSetpoint", "number", title: "Cooling?", required: true
 	}
-	section ("") {
-		label title: "Assign a name", required: false
-		input "modes", "mode", title: "Set for specific mode(s)", multiple: true, required: false
-	}
+	/*section ("") {
+		//label title: "Assign a name", required: false
+		//input "modes", "mode", title: "Set for specific mode(s)", multiple: true, required: false
+	}*/
 } 
 
 def installed() 

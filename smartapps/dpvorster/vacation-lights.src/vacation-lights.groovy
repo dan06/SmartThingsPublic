@@ -68,7 +68,8 @@ preferences {
         
         if (harmony != null)
         {
-        	harmony.getAllActivities()
+        	//harmony.getAllActivities()
+            harmony.refresh()
         	section ("Harmony activity", refreshAfterSelection:true) {
         		input "activity", "enum", title: "Activity?", required: true, options: new groovy.json.JsonSlurper().parseText(harmony?.latestValue('activities') ?: "[]").collect { ["${it.id}": it.name] }
         	}
@@ -137,6 +138,13 @@ private setSchedule()
 	
 	// And start today's vacation lights
 	scheduleCheck()
+    
+    // Only start Harmony activity once
+    try {
+     	// Start harmony activity
+       	harmony?.startActivity(activity)
+    }
+    catch(e){}
 }
 
 // Reset schedule for the next day
@@ -153,7 +161,10 @@ private stopSchedule()
 {
 	unschedule()
 	switches.off()
-    harmony?.startActivity("off");
+    try {
+    	harmony?.startActivity("off");
+    }
+    catch(e){}
 	resetSchedule()
 }
 
@@ -165,15 +176,6 @@ def scheduleCheck()
 	if(allOk)
 	{
 		log.debug("Running")
-        
-        try
-        {
-        	// Start harmony activity
-        	harmony?.startActivity(activity)
-        }
-        catch(e)
-        {
-        }
 		
 		// turn off all the switches
 		switches.off()
@@ -210,14 +212,12 @@ def turnOnRandomSwitches()
         try
 		{
         	inactive_switches[random_int].on()
-            log.debug "Turning on $inactive_switches[random_int]"
+            // then remove that switch from the pool off switches that can be turned on
+            inactive_switches.remove(random_int)
         }
         catch(e)
         {
         }
-        
-		// then remove that switch from the pool off switches that can be turned on
-		inactive_switches.remove(random_int)
 	}
 }
 
