@@ -40,10 +40,10 @@ preferences {
     
     page(name: "settings", title: "Settings")
     
-    page(name: "timeIntervalInput", title: "Only during a certain time", refreshAfterSelection:true) {
+    page(name: "timeIntervalInput", title: "Start at sunset and end at?", refreshAfterSelection:true) {
 		section {
-			input "starting", "time", title: "Starting (both are required)", required: false, refreshAfterSelection:true
-			input "ending", "time", title: "Ending (both are required)", required: false, refreshAfterSelection:true
+			/*input "starting", "time", title: "Starting (both are required)", required: false, refreshAfterSelection:true*/
+			input "ending", "time", title: "Ending", required: false, refreshAfterSelection:true
 		}
 	}
  }
@@ -68,7 +68,6 @@ preferences {
         
         if (harmony != null)
         {
-        	//harmony.getAllActivities()
             harmony.refresh()
         	section ("Harmony activity", refreshAfterSelection:true) {
         		input "activity", "enum", title: "Activity?", required: true, options: new groovy.json.JsonSlurper().parseText(harmony?.latestValue('activities') ?: "[]").collect { ["${it.id}": it.name] }
@@ -152,8 +151,9 @@ private resetSchedule()
 {
 	unschedule()
     schedule(starting, 'setSchedule')
-    log.debug "Setting Vacation Lights to start at $starting"
-    sendNotificationEvent("Vacation lights will start at $starting")
+    def startString = starting.format("yyyy-MM-dd HH:mm", location.timeZone)
+    log.debug "Setting Vacation Lights to start at $startString"
+    sendNotificationEvent("Vacation lights will start at $startString")
 }
 
 // Called when we're done - turn off lights and set up for tomorrow.
@@ -161,11 +161,13 @@ private stopSchedule()
 {
 	unschedule()
 	switches.off()
+    
+    resetSchedule()
+    
     try {
     	harmony?.startActivity("off");
     }
     catch(e){}
-	resetSchedule()
 }
 
 // We want to turn off all the lights
@@ -258,12 +260,18 @@ private getTimeOk()
 	if (starting && ending) 
 	{
 		def currTime = now()
-		def start = timeToday(starting).time
+        def start = starting.time
 		def stop = timeToday(ending).time
 		result = start < stop ? currTime >= start && currTime <= stop : currTime <= stop || currTime >= start
 	}
 	log.trace "timeOk = $result"
 	result
+}
+
+private getStarting()
+{
+    def result = getSunriseAndSunset(zipCode: zipCode, sunsetOffset: "+00:15").sunset
+    result
 }
 
 private hhmm(time, fmt = "h:mm a")
@@ -276,5 +284,5 @@ private hhmm(time, fmt = "h:mm a")
 
 private getTimeLabel()
 {
-	(starting && ending) ? hhmm(starting) + "-" + hhmm(ending, "h:mm a z") : ""
+	(ending) ? "sunset - " + hhmm(ending, "h:mm a z") : ""
 }
